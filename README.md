@@ -22,6 +22,16 @@ exactitud casi perfecta de forma casi circular, aquí predecimos la peligrosidad
 - **Dariem Garcia**
 - **Carlos Toro**
 
+## Conceptos
+
+¿Qué es un PHA? ¿Y el MOID? ¿Qué significa cada columna del CSV o cada métrica del
+notebook? Todo está explicado en **[`docs/`](docs/README.md)**:
+
+- [Conceptos astronómicos](docs/01-conceptos-astronomicos.md) — NEO, PHA, MOID, magnitud H, albedo, au, `v_rel` vs `v_inf`
+- [Columnas del dataset](docs/02-columnas-del-dataset.md) — significado, unidades y rol de cada campo
+- [Conceptos de machine learning](docs/03-conceptos-ml.md) — PCA, K-Means, t-SNE, F2, PR-AUC, SHAP, circularidad, sesgo de selección
+- [Fuentes de datos](docs/04-fuentes-de-datos.md) — CAD API vs SBDB API
+
 ## Estructura del pipeline
 
 El análisis está en dos notebooks que se ejecutan **en orden**:
@@ -51,8 +61,10 @@ El análisis está en dos notebooks que se ejecutan **en orden**:
   (`class_weight` / `scale_pos_weight`).
 - Métricas apropiadas para clases desbalanceadas: **F2, ROC-AUC, PR-AUC** (no accuracy).
 - **Análisis de circularidad:** una regla de dos umbrales iguala al ML (F2 ≈ 0.98).
-- **Validación temporal:** entrenar pre-2010 / evaluar post-2010; la prevalencia de PHA
-  cae de ~15% a ~1% (sesgo de selección de los sondeos).
+- **Validación temporal (por fecha real de descubrimiento):** entrenar con objetos
+  descubiertos antes de 2015 (prevalencia PHA 23.3%) y evaluar con los posteriores
+  (2.4%): el recall se mantiene (0.983, F2=0.971) pero la precisión cae a 0.928 —
+  el coste del sesgo de selección de los sondeos.
 - **Explicabilidad (SHAP):** la señal de peligro la aporta el tamaño (`H`/diámetro), no
   la cinemática.
 
