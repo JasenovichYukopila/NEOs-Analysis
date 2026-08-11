@@ -9,6 +9,9 @@ scipy==1.16.2
 scikit-learn==1.6.1
 xgboost==3.2.0
 imbalanced-learn==0.14.2
+
+# Used only by the headless driver (.claude/skills/run-neos-analysis/), which still
+# produces a quick t-SNE embedding; the notebook itself no longer uses t-SNE.
 openTSNE==1.0.4
 
 # Explainability
@@ -24,7 +27,3 @@ requests==2.34.2
 jupyter>=1.0.0
 ipykernel>=6.25.0
 nbconvert>=7.0.0
-
-# Optional: only for the t-SNE hyperparameter search (EDA); not needed for the
-# classification pipeline or the headless driver.
-optuna>=3.0.0

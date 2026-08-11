@@ -47,10 +47,10 @@ cada punto al centroide de su grupo. En el proyecto: `k = 4`, `n_init = 10`,
 
 Dos decisiones deliberadas del notebook:
 
-- **El clustering se hace en el espacio 5-D estandarizado, no sobre las coordenadas
-  PCA.** PCA y t-SNE se usan *solo para dibujar* el resultado. Agrupar sobre
-  coordenadas reducidas descartaría información real; no hay que mover el `fit` de
-  K-Means a las coordenadas reducidas.
+- **El clustering se hace en el espacio estandarizado completo, no sobre las coordenadas
+  PCA.** El PCA se usa *solo para dibujar* el resultado. Agrupar sobre coordenadas
+  reducidas descartaría información real; no hay que mover el `fit` de K-Means a las
+  coordenadas reducidas.
 - **`k = 4` está fijado.** La celda del método del codo es exploratoria: se conserva
   como justificación documental, no como selector automático.
 
@@ -60,48 +60,6 @@ Se grafica la inercia (suma de distancias al cuadrado a los centroides) frente a
 inercia siempre baja al subir k; se busca el punto donde deja de bajar bruscamente — el
 "codo" — como compromiso entre ajuste y parsimonia. Es un criterio visual, no una prueba
 estadística.
-
----
-
-## t-SNE (t-distributed Stochastic Neighbor Embedding)
-
-Reducción de dimensionalidad **no lineal** orientada a visualización. A diferencia de
-PCA, no busca conservar la varianza global sino la **estructura de vecindario local**:
-puntos próximos en 5-D quedan próximos en 2-D.
-
-Implementación: **openTSNE** (no la de scikit-learn), por rendimiento y por exponer más
-control sobre la optimización.
-
-> **Qué NO se puede leer en un gráfico t-SNE:** las distancias *entre* clusters y los
-> tamaños relativos de los clusters no son interpretables. Solo la pertenencia local lo es.
-
-### Perplejidad
-
-Hiperparámetro principal de t-SNE. Grosso modo, el número efectivo de vecinos que cada
-punto considera. Valores bajos resaltan microestructura; valores altos, estructura más
-global. No hay un valor "correcto" universal — de ahí la búsqueda con Optuna.
-
-### Trustworthiness
-
-Métrica en [0, 1] que mide **cuánto se puede confiar** en el embedding: penaliza los
-puntos que aparecen próximos en 2-D sin serlo en el espacio original (vecinos falsos).
-Es la función objetivo que Optuna maximiza.
-
-### Por qué ya no se usa Optuna
-
-Versiones anteriores buscaban los hiperparámetros de t-SNE con **Optuna** (200 *trials*
-maximizando `trustworthiness`). Se eliminó por tres razones:
-
-1. **Inviable**: con 340 000 eventos la búsqueda son horas de cómputo.
-2. **Sin efecto sobre los resultados**: t-SNE es puramente ilustrativo aquí, no sustenta
-   ninguna conclusión del trabajo.
-3. **Irreproducible en la práctica**: dependía de un CSV intermedio git-ignorado, así que
-   un clon del repositorio no podía regenerar la figura sin relanzar la búsqueda entera.
-
-Ahora se hace un **único embedding** con `perplexity = 50` sobre una submuestra aleatoria
-de 8 000 eventos con semilla fija. El tamaño lo impone `trustworthiness`, que es O(n²) en
-memoria: 8 000 puntos ocupan 0.5 GB y permiten calcular la métrica **exacta**, mientras
-que 30 000 exigirían 6.7 GB.
 
 ---
 
@@ -293,9 +251,9 @@ casi se cancelan en el producto.
 ## Reproducibilidad
 
 `random_state = 20` se define **una sola vez** en el preámbulo y se propaga a todo lo
-estocástico: `KMeans`, `PCA`/`StandardScaler`, t-SNE, los tres clasificadores y los
-esquemas de CV. Al modificar el notebook, hay que seguir usando esa variable en vez de
-literales sueltos.
+estocástico: `KMeans`, `PCA`/`StandardScaler`, los tres clasificadores y los esquemas de
+CV. Al modificar el notebook, hay que seguir usando esa variable en vez de literales
+sueltos.
 
 ---
 

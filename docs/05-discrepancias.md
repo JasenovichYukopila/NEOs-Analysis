@@ -275,8 +275,10 @@ Quedan por tanto **tres cantidades independientes**: `dist`, `v_inf` y `H`.
 
 ### Corrección aplicada
 
-PCA/K-Means/t-SNE ahora corren sobre `["CA DistanceNominal (au)", "V infinity(km/s)",
-"H(mag)"]` — las tres cantidades independientes.
+PCA/K-Means ahora corren sobre `["CA DistanceNominal (au)", "V infinity(km/s)",
+"H(mag)"]` — las tres cantidades independientes. (t-SNE se eliminó del notebook por
+completo: era puramente ilustrativo, no sustentaba ninguna conclusión, y su costo
+computacional —incluso en la versión reducida a un solo embedding— no se justificaba.)
 
 ### Resultado tras la corrección
 

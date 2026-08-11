@@ -32,7 +32,7 @@ notebook? Todo está explicado en **[`docs/`](docs/README.md)**:
 
 - [Conceptos astronómicos](docs/01-conceptos-astronomicos.md) — NEO, PHA, MOID, magnitud H, albedo, au, `v_rel` vs `v_inf`
 - [Columnas del dataset](docs/02-columnas-del-dataset.md) — significado, unidades y rol de cada campo
-- [Conceptos de machine learning](docs/03-conceptos-ml.md) — PCA, K-Means, t-SNE, F2, PR-AUC, SHAP, circularidad, sesgo de selección
+- [Conceptos de machine learning](docs/03-conceptos-ml.md) — PCA, K-Means, F2, PR-AUC, SHAP, circularidad, sesgo de selección
 - [Fuentes de datos](docs/04-fuentes-de-datos.md) — CAD API vs SBDB API
 - [**Discrepancias físicas y teóricas**](docs/05-discrepancias.md) — auditoría contra la
   documentación de JPL, la literatura y otros repos, con evidencia reproducible
@@ -58,8 +58,9 @@ El análisis está en dos notebooks que se ejecutan **en orden**:
   ver [discrepancia A](docs/05-discrepancias.md#a--el-dataset-está-censurado-en-el-umbral-que-define-la-etiqueta).
 - **Columna `post_discovery`.** El 78.1 % de los eventos del catálogo son integraciones
   numéricas hacia atrás, anteriores al descubrimiento del objeto. El análisis principal
-  usa solo los realmente observados; el catálogo completo queda para el anexo de
-  sensibilidad.
+  usa solo los realmente observados (`post_discovery == 1`); el efecto de incluir los
+  retroactivos está cuantificado aparte, en
+  [docs/05-discrepancias.md](docs/05-discrepancias.md#f--el-436--de-las-aproximaciones-observadas-son-anteriores-al-descubrimiento).
 - **Etiqueta oficial** `PHA_official` (flag `pha` de la SBDB, *ground truth*) y
   **etiqueta proxy** `PHA_proxy` derivada solo de lo observado. El `MOID` oficial se
   usa solo para etiquetar/validar, **nunca** como predictor.
@@ -69,8 +70,6 @@ El análisis está en dos notebooks que se ejecutan **en orden**:
   `Diameter` y `v_rel` por ser funciones deterministas de las otras: incluirlas degeneraba
   el espectro y producía una componente de varianza ≈ 0 por aritmética, no por física.
 - **K-Means** (k=4) sobre las dimensiones estandarizadas, no sobre las coordenadas PCA.
-- **t-SNE** (openTSNE) sobre submuestra con semilla fija. Es puramente ilustrativo y no
-  sustenta ninguna conclusión.
 
 ### 3. Clasificación supervisada como instrumento de medida
 - Unidad de análisis: el **objeto** (agregación de eventos por `Object`, solo eventos
@@ -122,7 +121,6 @@ pip install -r requirements.txt
 | `xgboost` | Clasificador gradient boosting |
 | `imbalanced-learn` | Manejo de clases desbalanceadas |
 | `shap` | Explicabilidad del modelo |
-| `openTSNE` | Reducción de dimensiones (t-SNE) |
-| `optuna` | Búsqueda de hiperparámetros para t-SNE |
+| `openTSNE` | Usado solo por el driver headless (`.claude/skills/run-neos-analysis/`), no por el notebook |
 | `matplotlib` | Visualización |
 | `requests` | Consumo de las APIs de JPL |

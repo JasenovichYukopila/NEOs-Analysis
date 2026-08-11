@@ -128,7 +128,7 @@ que su F2 alto es definicional. Ver [discrepancia B](05-discrepancias.md#b--hmag
 
 ## Conjunto canónico de features del análisis no supervisado
 
-PCA, K-Means y t-SNE trabajan sobre **tres cantidades independientes** a nivel de evento,
+PCA y K-Means trabajan sobre **tres cantidades independientes** a nivel de evento,
 definidas una sola vez en la celda de preámbulo del notebook de ML:
 
 ```python
