@@ -87,14 +87,21 @@ Métrica en [0, 1] que mide **cuánto se puede confiar** en el embedding: penali
 puntos que aparecen próximos en 2-D sin serlo en el espacio original (vecinos falsos).
 Es la función objetivo que Optuna maximiza.
 
-### Optuna
+### Por qué ya no se usa Optuna
 
-Framework de optimización de hiperparámetros. Aquí ejecuta `N_TRIALS = 200` pruebas de
-configuraciones de t-SNE maximizando `trustworthiness`, y escribe los resultados en
-`tsne_optuna_results.csv`, que una celda posterior relee para seleccionar las mejores
-configuraciones y reajustarlas.
+Versiones anteriores buscaban los hiperparámetros de t-SNE con **Optuna** (200 *trials*
+maximizando `trustworthiness`). Se eliminó por tres razones:
 
-Ese CSV es un artefacto local del notebook y está git-ignorado (`*.csv`).
+1. **Inviable**: con 340 000 eventos la búsqueda son horas de cómputo.
+2. **Sin efecto sobre los resultados**: t-SNE es puramente ilustrativo aquí, no sustenta
+   ninguna conclusión del trabajo.
+3. **Irreproducible en la práctica**: dependía de un CSV intermedio git-ignorado, así que
+   un clon del repositorio no podía regenerar la figura sin relanzar la búsqueda entera.
+
+Ahora se hace un **único embedding** con `perplexity = 50` sobre una submuestra aleatoria
+de 8 000 eventos con semilla fija. El tamaño lo impone `trustworthiness`, que es O(n²) en
+memoria: 8 000 puntos ocupan 0.5 GB y permiten calcular la métrica **exacta**, mientras
+que 30 000 exigirían 6.7 GB.
 
 ---
 
@@ -195,16 +202,20 @@ mismo asteroide aparecería en entrenamiento y en test — fuga de información 
 **Leakage** (fuga): el modelo accede, directa o indirectamente, a información que no
 estaría disponible en el momento de predecir — o directamente a la respuesta.
 
-**Circularidad** es el caso extremo que este proyecto pone en evidencia. PHA se *define*
-como `MOID ≤ 0.05 au ∧ H ≤ 22`. Buena parte de la literatura alimenta al modelo con esas
-mismas variables (o proxies suyos) y obtiene exactitud casi perfecta, presentándola como
-un logro predictivo. No lo es: el modelo está reconstruyendo una definición, no
-descubriendo física.
+**Circularidad** es el caso extremo que este proyecto expone en la literatura. PHA se
+*define* como `MOID ≤ 0.05 au ∧ H ≤ 22`. Buena parte de la literatura alimenta al modelo
+con esas mismas variables (o proxies suyos) y obtiene exactitud casi perfecta,
+presentándola como un logro predictivo. No lo es: el modelo está reconstruyendo una
+definición, no descubriendo física.
 
-El notebook lo demuestra explícitamente con un **baseline de regla de dos umbrales** —
-aplicar los mismos umbrales que definen PHA sobre las variables observadas — que alcanza
-**F2 = 0.980**, igualando a Random Forest y XGBoost. Si una regla de dos `if` empata con
-gradient boosting, el problema no era de machine learning.
+El notebook lo contrasta con un **baseline de regla de dos umbrales** — aplicar los mismos
+umbrales que definen PHA sobre las variables observadas. En este proyecto esa regla
+alcanza **F2 = 0.343**, muy por debajo de XGBoost sobre `kin+size` (**F2 = 0.713**): la
+brecha entre la regla ingenua y el modelo entrenado es justo la evidencia de que **aquí**
+no hay circularidad — hay señal real que el ML captura y la regla no. (Una versión
+anterior y censurada del dataset sí igualaba regla y modelo en F2 ≈ 0.98; ver
+[docs/05-discrepancias.md](05-discrepancias.md#a--el-dataset-está-censurado-en-el-umbral-que-define-la-etiqueta)
+para el porqué y la corrección.)
 
 ---
 
@@ -217,9 +228,12 @@ promediada sobre todas las coaliciones posibles de features.
 Ventaja sobre la importancia por impureza de un Random Forest: es consistente y da
 atribuciones **por predicción individual**, no solo un ranking global.
 
-Resultado en este proyecto: la señal de peligrosidad la aporta el **tamaño**
-(`H_obs`), no la cinemática — coherente con el contraste `size-only` (F2 ≈ 0.97) vs
-`kin-only` (F2 ≈ 0.49).
+Resultado en este proyecto: `H_obs` sigue siendo la variable individual más informativa
+(F2 `size-only` = 0.653 vs F2 `kin-only` = 0.382), coherente con ser una de las dos
+variables que definen PHA. Pero a diferencia de una versión censurada anterior del
+dataset, la cinemática **sí** añade información por encima del tamaño solo:
+`kin+size` (F2 = 0.713) supera a `size-only` en +0.06, un incremento real que el gráfico
+de importancias y el *beeswarm* de SHAP desglosan.
 
 ---
 
@@ -234,36 +248,45 @@ El notebook lo cuantifica de dos formas:
 ### Función de selección temporal
 
 Prevalencia de PHA por **década de primera observación real** (`first_obs_year`, no el
-año del primer evento del catálogo, que puede ser retroactivo hasta 1900). La
-prevalencia cae drásticamente con el tiempo. En paralelo se mide
-`corr(data_arc, PHA) = 0.647`: los PHA tienen arcos orbitales más largos porque se les
-observa más, lo que es un **confundidor de caracterización**, no física.
+año del primer evento del catálogo, que puede ser retroactivo hasta 1900 — el 78.1 % de
+los eventos del catálogo lo son). La prevalencia cae con el tiempo. En paralelo se mide
+`corr(data_arc, PHA) = 0.351`: los PHA tienen arcos orbitales algo más largos porque se
+les observa más, lo que es un **confundidor de caracterización**, no física.
 
 ### Hold-out temporal
 
-La prueba honesta: entrenar solo con objetos **descubiertos antes de 2015** (4 451
-objetos, prevalencia PHA 23.3 %) y evaluar con los descubiertos **después** (14 476
-objetos, prevalencia 2.4 %). Las medianas de imputación se calculan **solo con el
+La prueba honesta: entrenar solo con objetos **descubiertos antes de 2015** (10 880
+objetos, prevalencia PHA 14.6 %) y evaluar con los descubiertos **después** (26 525
+objetos, prevalencia 2.6 %). Las medianas de imputación se calculan **solo con el
 train**, para que no se filtre información del futuro hacia el pasado.
 
 Resultado con XGBoost `kin+size`:
 
 | Escenario | F2 | Precisión | Recall |
 |---|---|---|---|
-| CV aleatoria | 0.977 | — | — |
-| Hold-out temporal (<2015 → ≥2015) | 0.971 | **0.928** | 0.983 |
+| CV aleatoria | 0.713 | — | — |
+| Hold-out temporal (<2015 → ≥2015) | 0.611 | **0.388** | 0.714 |
 
-El recall aguanta, la precisión cae. Esa caída es exactamente **el coste del
-desplazamiento de prevalencia** (23.3 % → 2.4 %): en un mundo donde los peligrosos son
-diez veces más raros, el mismo modelo genera muchas más falsas alarmas. Una CV aleatoria
-nunca habría revelado esto.
+El recall se mantiene razonable, pero la precisión cae con fuerza. Esa caída es
+principalmente **el coste del desplazamiento de prevalencia** (14.6 % → 2.6 %): en un
+mundo donde los peligrosos son casi seis veces más raros, el mismo modelo genera muchas
+más falsas alarmas por cada acierto. Una CV aleatoria nunca habría revelado esto.
 
 ### Sesgo de muestreo
 
 Adicionalmente se compara la prevalencia PHA del dataset (condicionado a tener
-aproximaciones registradas) contra el total de NEOs de la SBDB. El enriquecimiento es
-**leve**: la selección dominante es la temporal (por descubrimiento), no el
-condicionamiento por aproximación cercana.
+aproximaciones registradas) contra el total de NEOs de la SBDB, **por cada condición de la
+definición por separado** — la prevalencia conjunta puede ocultar sesgos que se cancelan:
+
+| población | n | PHA | MOID≤0.05 | H≤22 |
+|---|---:|---:|---:|---:|
+| todos los NEOs (SBDB) | 42 318 | 6.1 % | 54.1 % | 27.6 % |
+| en el catálogo CAD | 37 405 | 6.0 % | 59.4 % | 21.4 % |
+
+El enriquecimiento en la prevalencia conjunta es efectivamente leve (6.1 % → 6.0 %), pero
+no porque no haya sesgo por aproximación: es porque el catálogo enriquece la condición
+MOID (+5.3 pp) y empobrece la condición H (−6.2 pp) en direcciones opuestas, y ambas
+casi se cancelan en el producto.
 
 ---
 

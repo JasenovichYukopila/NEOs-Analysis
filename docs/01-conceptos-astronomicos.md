@@ -78,6 +78,17 @@ La distancia observada es siempre **≥** el MOID (nunca puedes acercarte más d
 geometría permite), y para objetos con pocos pasos registrados puede ser muchísimo mayor.
 De ahí que `PHA_proxy` no reproduzca exactamente a `PHA_official`.
 
+> ⚠ Esa desigualdad vale **a época fija**. El MOID evoluciona secularmente en escalas de
+> siglos, así que comparar el MOID actual de la SBDB con pasos de 1900–2026 la rompe: en
+> el snapshot actual, el **6.0 % de los objetos** tiene `MOID > distancia mínima
+> observada`. Ver [discrepancia G](05-discrepancias.md#g--el-moid-depende-de-la-época-y-el-104--de-los-objetos-lo-demuestra).
+
+Esta diferencia entre "lo que la geometría permite" y "lo que de hecho se observó" es el
+**objeto de estudio** del trabajo. Entre los PHA reales, la distancia observada mínima es
+mediana **3.8 veces mayor** que su MOID: rara vez se captura un objeto en la configuración
+orbital más desfavorable, y de ahí que el proxy observacional tenga alta precisión pero
+bajo *recall*.
+
 **Por qué importa metodológicamente:** el MOID *define* la etiqueta. Usarlo como
 predictor sería circular — el modelo estaría leyendo la respuesta. En este proyecto
 `MOID (au)` se descarga y se guarda, pero **solo para etiquetar y validar, nunca como

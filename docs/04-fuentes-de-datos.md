@@ -10,16 +10,28 @@ una responde a una pregunta diferente, y hacen falta las dos.
 ## CAD API — Close Approach Data
 
 ```
-https://ssd-api.jpl.nasa.gov/cad.api?date-min=1900-01-01&date-max=<hoy>&diameter=true
+https://ssd-api.jpl.nasa.gov/cad.api?date-min=<a>-01-01&date-max=<b>-01-01
+                                    &dist-max=0.5&diameter=true
 ```
 
 **Unidad de respuesta: el evento.** Devuelve una fila por cada aproximación cercana
 calculada, con la fecha, la distancia y las velocidades del encuentro.
 
-- `date-min=1900-01-01` — historia completa. Ojo: incluye aproximaciones **calculadas
-  retroactivamente** para objetos descubiertos hace pocos años. Por eso el año del primer
-  evento de un objeto **no** es su fecha de descubrimiento.
+- `dist-max=0.5` — **explícito y obligatorio**. El valor por defecto de la API es
+  `0.05` au, que es exactamente el umbral de distancia de la definición PHA: dejarlo
+  implícito censura la muestra en el umbral de la propia etiqueta. 0.5 au es el límite
+  superior que sirve la base de datos de JPL (pedir 1 au devuelve lo mismo).
+  Ver [discrepancia A](05-discrepancias.md#a--el-dataset-está-censurado-en-el-umbral-que-define-la-etiqueta).
+- `date-min` / `date-max` — la consulta se **trocea por décadas** (`descargar_cad`, en el
+  notebook de datos). Una petición única de 340 000 eventos tarda ~6 min y falla de forma
+  intermitente con `ChunkedEncodingError`; troceada tarda ~2 min y es reproducible.
+  Historia completa desde 1900, con `drop_duplicates` en las fronteras por seguridad.
 - `diameter=true` — pide los campos `diameter` y `diameter_sigma`, ausentes por defecto.
+
+> ⚠ La cobertura desde 1900 incluye aproximaciones **calculadas retroactivamente** para
+> objetos descubiertos hace pocos años: el **78.1 % de los eventos son anteriores al
+> descubrimiento** de su objeto. Por eso el CSV lleva la columna `post_discovery`, y el
+> análisis principal se restringe a los eventos realmente observados.
 
 Campos usados: `des`, `cd`, `dist`, `dist_min`, `v_rel`, `v_inf`, `h`, `diameter`,
 `diameter_sigma`.
@@ -100,4 +112,4 @@ python .claude/skills/run-neos-analysis/driver.py
 
 ---
 
-[← Conceptos de ML](03-conceptos-ml.md) · [Índice](README.md)
+[← Conceptos de ML](03-conceptos-ml.md) · [Índice](README.md) · [Siguiente: discrepancias →](05-discrepancias.md)

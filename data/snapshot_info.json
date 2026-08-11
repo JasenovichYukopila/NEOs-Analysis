@@ -1,8 +1,10 @@
 {
-  "snapshot_date_utc": "20260619",
-  "n_events": 32568,
-  "n_objects": 18934,
-  "n_pha_official": 1379,
+  "snapshot_date_utc": "20260811",
+  "dist_max_au": 0.5,
+  "n_events": 340469,
+  "n_events_post_discovery": 74530,
+  "n_objects": 39074,
+  "n_pha_official": 2481,
   "python": "3.11.9",
   "pandas": "2.3.3"
 }

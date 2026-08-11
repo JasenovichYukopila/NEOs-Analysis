@@ -1,4 +1,4 @@
-# NEO Analysis: Clasificación de peligrosidad consciente de la selección
+# NEO Analysis: sustitución de medida y función de selección en catálogos de aproximaciones cercanas
 
 ## Proyecto de Análisis de Objetos Cercanos a la Tierra (NEOs)
 
@@ -6,15 +6,18 @@ Este repositorio estudia los Objetos Cercanos a la Tierra (NEOs) a partir de su
 registro de **aproximaciones cercanas** (Close-Approach Data) de JPL/NASA. La pregunta
 central es:
 
-> **¿Se puede inferir el carácter potencialmente peligroso (PHA) de un NEO a partir
-> únicamente de la cinemática de sus aproximaciones observadas — sin los elementos
-> orbitales (MOID, a, e, i) que lo definen — y cómo distorsiona esa inferencia la
-> función de selección observacional de 126 años de catálogo?**
+> **¿Puede la distancia mínima observada en las aproximaciones cercanas sustituir al
+> MOID orbital que define formalmente a un asteroide potencialmente peligroso (PHA), y
+> cómo distorsiona esa sustitución la función de selección observacional de 126 años de
+> catálogo?**
 
-A diferencia de la literatura habitual, que alimenta al modelo (proxies de) las mismas
-variables que *definen* la etiqueta PHA (`MOID ≤ 0.05 au` y `H ≤ 22`) y obtiene una
-exactitud casi perfecta de forma casi circular, aquí predecimos la peligrosidad desde lo
-**observable** y exponemos esa circularidad.
+Es deliberadamente una pregunta de **medida**, no de predicción. PHA no es un fenómeno
+físico sino una definición administrativa (`MOID ≤ 0.05 au` **y** `H ≤ 22`): cualquier
+clasificador alimentado con proxies de esas dos cantidades no predice nada, reconstruye
+una definición. La literatura habitual hace exactamente eso y reporta exactitudes casi
+perfectas de forma circular. Aquí el aprendizaje supervisado se usa como **instrumento de
+medida**, y lo que se reporta es el error de sustitución y su dependencia de la selección
+observacional.
 
 ## Colaboradores
 
@@ -31,42 +34,63 @@ notebook? Todo está explicado en **[`docs/`](docs/README.md)**:
 - [Columnas del dataset](docs/02-columnas-del-dataset.md) — significado, unidades y rol de cada campo
 - [Conceptos de machine learning](docs/03-conceptos-ml.md) — PCA, K-Means, t-SNE, F2, PR-AUC, SHAP, circularidad, sesgo de selección
 - [Fuentes de datos](docs/04-fuentes-de-datos.md) — CAD API vs SBDB API
+- [**Discrepancias físicas y teóricas**](docs/05-discrepancias.md) — auditoría contra la
+  documentación de JPL, la literatura y otros repos, con evidencia reproducible
+  (`python scripts/verificar_discrepancias.py`)
 
 ## Estructura del pipeline
 
 El análisis está en dos notebooks que se ejecutan **en orden**:
 
 1. **`data/ProyectoNeoRework_data.ipynb`** — descarga las aproximaciones cercanas (CAD
-   API) y el catálogo de NEOs (SBDB API), construye las etiquetas de peligrosidad y
-   guarda `data/close_approaches.csv` (cache de 30 días).
+   API, troceada por décadas con reintentos) y el catálogo de NEOs (SBDB API), construye
+   las etiquetas y guarda `data/close_approaches.csv` (cache de 30 días).
 2. **`notebooks/ProyectoNeoRework_ml.ipynb`** — lee el CSV y ejecuta el análisis.
 
 ## Características principales
 
 ### 1. Obtención y etiquetado de datos
 - Descarga automática de aproximaciones cercanas (CAD) y de NEOs (SBDB) de JPL/NASA.
-- Cache local del CSV con validación de antigüedad (30 días).
+- **`dist-max=0.5` au explícito.** El valor por defecto de la CAD API es `0.05` au, que es
+  exactamente el umbral de distancia de la definición PHA: dejarlo implícito censura la
+  muestra en el umbral de la propia etiqueta y la vuelve casi tautológica. Es un fallo
+  silencioso que afecta a trabajos publicados —
+  ver [discrepancia A](docs/05-discrepancias.md#a--el-dataset-está-censurado-en-el-umbral-que-define-la-etiqueta).
+- **Columna `post_discovery`.** El 78.1 % de los eventos del catálogo son integraciones
+  numéricas hacia atrás, anteriores al descubrimiento del objeto. El análisis principal
+  usa solo los realmente observados; el catálogo completo queda para el anexo de
+  sensibilidad.
 - **Etiqueta oficial** `PHA_official` (flag `pha` de la SBDB, *ground truth*) y
   **etiqueta proxy** `PHA_proxy` derivada solo de lo observado. El `MOID` oficial se
   usa solo para etiquetar/validar, **nunca** como predictor.
 
 ### 2. Análisis exploratorio (no supervisado)
-- **PCA** (PC1+PC2 ≈ 77.8% de varianza); revela redundancia (PC5 ≈ 0%).
-- **K-Means** (k=4) sobre las 5 dimensiones estandarizadas.
-- **t-SNE** (openTSNE) con búsqueda de hiperparámetros vía Optuna.
+- **PCA** sobre **tres cantidades independientes** (`dist`, `v_inf`, `H`). Se excluyen
+  `Diameter` y `v_rel` por ser funciones deterministas de las otras: incluirlas degeneraba
+  el espectro y producía una componente de varianza ≈ 0 por aritmética, no por física.
+- **K-Means** (k=4) sobre las dimensiones estandarizadas, no sobre las coordenadas PCA.
+- **t-SNE** (openTSNE) sobre submuestra con semilla fija. Es puramente ilustrativo y no
+  sustenta ninguna conclusión.
 
-### 3. Clasificación supervisada de peligrosidad (PHA)
-- Unidad de análisis: el **objeto** (agregación de eventos por `Object`).
+### 3. Clasificación supervisada como instrumento de medida
+- Unidad de análisis: el **objeto** (agregación de eventos por `Object`, solo eventos
+  posteriores al descubrimiento).
 - Modelos: Regresión Logística, Random Forest, XGBoost; manejo de desbalance
   (`class_weight` / `scale_pos_weight`).
 - Métricas apropiadas para clases desbalanceadas: **F2, ROC-AUC, PR-AUC** (no accuracy).
-- **Análisis de circularidad:** una regla de dos umbrales iguala al ML (F2 ≈ 0.98).
+- **Ya no hay circularidad trivial.** Con el dataset corregido, la regla de dos umbrales
+  que antes igualaba al ML obtiene F2=0.343 — muy por debajo de XGBoost (F2=0.713,
+  `kin+size`). La censura del dataset anterior forzaba artificialmente esa igualdad.
+- **La cinemática sí aporta señal sobre el tamaño solo:** `kin+size` (F2=0.713) supera a
+  `size-only` (F2=0.653) y ambos superan ampliamente a `kin-only` (F2=0.382).
 - **Validación temporal (por fecha real de descubrimiento):** entrenar con objetos
-  descubiertos antes de 2015 (prevalencia PHA 23.3%) y evaluar con los posteriores
-  (2.4%): el recall se mantiene (0.983, F2=0.971) pero la precisión cae a 0.928 —
-  el coste del sesgo de selección de los sondeos.
-- **Explicabilidad (SHAP):** la señal de peligro la aporta el tamaño (`H`/diámetro), no
-  la cinemática.
+  descubiertos antes de 2015 (prevalencia PHA 14.6%) y evaluar con los posteriores
+  (2.6%): F2 cae de 0.713 (CV aleatoria) a 0.611, con precisión 0.388 y recall 0.714 —
+  el coste del desplazamiento de prevalencia.
+- **Resultado central — sustitución del MOID por la distancia observada:** r=0.869,
+  precisión=0.985, recall=0.295. Entre los PHA reales, la distancia observada mediana es
+  **3.8× su MOID** — rara vez se captura el paso más cercano posible. Esa brecha es
+  física, no ruido de muestreo.
 
 ## Ejecución rápida (headless)
 
