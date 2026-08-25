@@ -11,6 +11,7 @@ tocar el código, o como consulta puntual cuando aparezca una sigla desconocida.
 | [03 — Conceptos de machine learning](03-conceptos-ml.md) | PCA, K-Means, F2, PR-AUC, SHAP, colinealidad, circularidad, sesgo de selección |
 | [04 — Fuentes de datos (APIs de JPL)](04-fuentes-de-datos.md) | CAD API vs SBDB API: qué devuelve cada una y por qué hacen falta las dos |
 | [05 — Discrepancias físicas y teóricas](05-discrepancias.md) | Auditoría contra la documentación de JPL, la literatura y otros repos: qué no cuadra, qué sí, y por qué se corrigió |
+| [06 — Predicción del MOID Orbital](06-prediccion-moid.md) | Regresión continua y clasificación del umbral de peligro MOID ($\text{MOID} \le 0.05\text{ au}$) mediante aprendizaje supervisado |
 
 > El documento 05 registra tanto los hallazgos **como su corrección**: el dataset ya no
 > está censurado y las conclusiones del notebook reflejan los datos corregidos. Su

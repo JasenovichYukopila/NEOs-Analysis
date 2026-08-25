@@ -37,6 +37,7 @@ notebook? Todo está explicado en **[`docs/`](docs/README.md)**:
 - [**Discrepancias físicas y teóricas**](docs/05-discrepancias.md) — auditoría contra la
   documentación de JPL, la literatura y otros repos, con evidencia reproducible
   (`python scripts/verificar_discrepancias.py`)
+- [**Predicción del MOID Orbital**](docs/06-prediccion-moid.md) — regresión continua y clasificación binaria del umbral de peligro MOID ($\text{MOID} \le 0.05\text{ au}$) (`python scripts/predict_moid.py`)
 
 ## Estructura del pipeline
 

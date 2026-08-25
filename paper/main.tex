@@ -235,8 +235,18 @@ Points lie above $y=x$: the observed distance is biased high relative to MOID.}
 \includegraphics[width=0.6\linewidth]{clf_collinearity.png}
 \caption{Absolute Pearson correlation among candidate object-level features,
 motivating the pruned sets.}
-\label{fig:collinear}
-\end{figure}
+\subsection{MOID Prediction}
+Because orbital MOID requires extended astrometric observations to establish a
+full orbital solution, early-stage hazard evaluation benefits from predicting orbital
+MOID directly from initial kinematic and observational features. Using the feature set
+($\mathrm{distnom\_min}, v_\infty, H_\text{obs}, n_\text{appro}, \text{dist\_unc\_med}$),
+gradient-boosted regression achieves $R^2 = 0.807$ and $\mathrm{MAE} = 0.0193\text{ au}$
+in predicting continuous MOID, substantially outperforming the raw minimum observed distance baseline
+($R^2 = 0.508, \mathrm{MAE} = 0.0259\text{ au}$). For the binary hazard threshold
+($\mathrm{MOID}\le 0.05\text{ au}$), classification yields $F_2 = 0.910$ (Random Forest) and $\text{ROC-AUC} = 0.963$ (XGBoost),
+boosting recall from 0.785 (naive observational proxy) to over 0.904 while
+preserving strong generalizability on temporal hold-out evaluations ($R^2 = 0.806, F_2 = 0.911$ for objects
+discovered $\ge 2015$).
 
 \section{Discussion}
 Our results recast a seemingly solved problem. The high scores in the literature are
