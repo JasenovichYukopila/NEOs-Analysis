@@ -122,6 +122,5 @@ pip install -r requirements.txt
 | `xgboost` | Clasificador gradient boosting |
 | `imbalanced-learn` | Manejo de clases desbalanceadas |
 | `shap` | Explicabilidad del modelo |
-| `openTSNE` | Usado solo por el driver headless (`.claude/skills/run-neos-analysis/`), no por el notebook |
 | `matplotlib` | Visualización |
 | `requests` | Consumo de las APIs de JPL |

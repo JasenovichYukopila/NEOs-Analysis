@@ -10,10 +10,6 @@ scikit-learn==1.6.1
 xgboost==3.2.0
 imbalanced-learn==0.14.2
 
-# Used only by the headless driver (.claude/skills/run-neos-analysis/), which still
-# produces a quick t-SNE embedding; the notebook itself no longer uses t-SNE.
-openTSNE==1.0.4
-
 # Explainability
 shap==0.51.0
 
