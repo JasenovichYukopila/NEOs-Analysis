@@ -29,12 +29,12 @@ El módulo de predicción (`scripts/predict_moid.py`) aborda dos problemas compl
 ### 1. Regresión Continua del MOID
 - **Variable Objetivo ($y$):** `MOID (au)` en escala continua.
 - **Métricas:** Coeficiente de determinación ($R^2$), Error Absoluto Medio ($\text{MAE}$ en UA) y Raíz del Error Cuadrático Medio ($\text{RMSE}$ en UA).
-- **Línea de Base (Baseline Naïve):** Asumir directamente que $\widehat{\text{MOID}} = \text{distnom\_min}$.
+- **Línea de Base (Baseline Naïve):** Asumir directamente que $\widehat{\text{MOID}} = \mathrm{distnom\_min}$.
 
 ### 2. Clasificación Binaria del Umbral Peligroso
 - **Variable Objetivo ($y$):** `is_moid_hazardous` $= 1$ si $\text{MOID} \le 0.05\text{ au}$, y $0$ en caso contrario.
 - **Métricas:** $F_2\text{-score}$ (priorizando minimizar falsos negativos), Precisión, Recall, ROC-AUC y PR-AUC.
-- **Línea de Base:** Regla directa $\text{distnom\_min} \le 0.05\text{ au}$.
+- **Línea de Base:** Regla directa $\mathrm{distnom\_min} \le 0.05\text{ au}$.
 
 ---
 
@@ -67,11 +67,11 @@ Evaluado mediante **Validación Cruzada de 5 Folds (5-Fold CV)** sobre los objet
   - **Random Forest Regressor:** $R^2 \approx 0.8145$, $\text{MAE} \approx 0.0468\text{ au}$
   - **XGBoost Regressor:** **$R^2 = 0.8423$**, **$\text{MAE} = 0.0431\text{ au}$**, $\text{RMSE} = 0.0708\text{ au}$
 
-El modelo **XGBoost Regressor** reduce el error absoluto medio ($\text{MAE}$) en más de un $24.8\%$ respecto a la cota observada directa, corrigiendo en gran medida el sesgo donde $\text{distnom\_min} > \text{MOID}$.
+El modelo **XGBoost Regressor** reduce el error absoluto medio ($\text{MAE}$) en más de un $24.8\%$ respecto a la cota observada directa, corrigiendo en gran medida el sesgo donde $\mathrm{distnom\_min} > \text{MOID}$.
 
 ### 2. Clasificación Binaria del Umbral $\text{MOID} \le 0.05\text{ au}$
 
-- **Proxy directo ($\text{distnom\_min} \le 0.05$):**
+- **Proxy directo ($\mathrm{distnom\_min} \le 0.05$):**
   - Precisión: $0.985$ | Recall: $0.295$ | $F_2\text{-score}$: $0.343$
 - **Regresión Logística:** $F_2 = 0.698$ | $\text{ROC-AUC} = 0.884$
 - **Random Forest Classifier:** $F_2 = 0.742$ | $\text{ROC-AUC} = 0.912$
